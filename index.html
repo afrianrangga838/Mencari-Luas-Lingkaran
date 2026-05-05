@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Visualisasi Interaktif: Luas Lingkaran</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #2d3436; 
+            margin: 0; 
+            padding: 40px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+        
+        .container { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px);
+            padding: 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            max-width: 900px; 
+            width: 100%; 
+            text-align: center; 
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        h1 { margin-top: 0; color: #6c5ce7; font-weight: 800; font-size: 2.2em; }
+        p.subtitle { font-size: 1.1em; color: #636e72; margin-bottom: 30px; }
+
+        .controls { 
+            display: flex; 
+            justify-content: center; 
+            gap: 40px; 
+            margin-bottom: 30px; 
+            flex-wrap: wrap; 
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .control-group { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .control-group label { margin-bottom: 12px; font-weight: 700; color: #2d3436; font-size: 1.1em; }
+        
+        input[type="range"] { 
+            width: 200px; cursor: pointer; accent-color: #00b894; 
+        }
+        input[type="number"] { 
+            width: 100px; padding: 10px; text-align: center; 
+            border: 2px solid #dfe6e9; border-radius: 12px; 
+            font-size: 18px; font-weight: bold; color: #0984e3;
+            transition: border-color 0.3s ease;
+        }
+        input[type="number"]:focus { outline: none; border-color: #74b9ff; }
+        
+        .input-row { display: flex; align-items: center; gap: 15px; }
+
+        canvas { 
+            background: transparent; 
+            border: 2px dashed #b2bec3; 
+            border-radius: 16px; 
+            margin-bottom: 30px; 
+            max-width: 100%; 
+        }
+
+        .math-box { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 16px; 
+            font-size: 1.15em; 
+            line-height: 1.8; 
+            text-align: left; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 8px solid #00cec9;
+            position: relative;
+            overflow: hidden;
+        }
+        .math-box::before {
+            content: "💡";
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 50px;
+            opacity: 0.1;
+        }
+        .math-box hr { border: 0; height: 2px; background: #f1f2f6; margin: 20px 0; }
+        
+        .logic-highlight { 
+            display: inline-block;
+            padding: 4px 10px; 
+            border-radius: 8px; 
+            font-weight: 800; 
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        .result-box {
+            background: #fff9c4;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+            border: 1px solid #f1c40f;
+        }
+        .note { font-size: 0.85em; color: #b2bec3; margin-top: 8px; }
+
+        /* Kelas untuk Pecahan Vertikal */
+        .frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 4px;
+            font-size: 0.9em;
+            line-height: 1.2;
+        }
+        .frac span:first-child {
+            border-bottom: 2px solid currentColor;
+            padding: 0 4px;
+        }
+        .frac span:last-child {
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✨ Pembuktian Rumus Luas Lingkaran</h1>
+    <p class="subtitle">Semakin banyak potongannya (menuju tak terhingga), bentuknya akan semakin mendekati dan memenuhi batas kotak persegi panjang sempurna!</p>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="inputR">📏 Jari-jari (r):</label>
+            <!-- step="0.1" memungkinkan kita memasukkan koma berapapun (1.8, 2.4, dll) -->
+            <input type="number" id="inputR" value="7" min="0.1" max="100" step="0.1">
+        </div>
+        <div class="control-group">
+            <label for="inputN">✂️ Potong Menjadi (n) Juring:</label>
+            <div class="input-row">
+                <input type="range" id="sliderN" value="8" min="4" max="360" step="2">
+                <input type="number" id="inputN" value="8" min="4" max="2000" step="2">
+            </div>
+            <div class="note">*Ketik hingga 2000 untuk efek "Unlimited"</div>
+        </div>
+    </div>
+
+    <!-- Area Canvas -->
+    <canvas id="myCanvas" width="850" height="340"></canvas>
+
+    <div class="math-box">
+        <div style="color: #0984e3; font-weight: 800; margin-bottom: 10px;">🤖 Analisis Bentuk Visual:</div>
+        <strong>Perhatikan target kotak putus-putus di atas:</strong><br>
+        Panjang alas susunan = Setengah dari keliling lingkaran = <strong>&pi; &times; r</strong><br>
+        Tinggi susunan = Jari-jari lingkaran = <strong>r</strong><br>
+        Jadi, Luas Lingkaran = Luas Persegi Panjang = (&pi; &times; r) &times; r = <strong style="color: #6c5ce7; font-size: 1.2em;">&pi; &times; r&sup2;</strong><br>
+        <hr>
+        <strong>Kalkulasi untuk r = <span id="textR">7</span>:</strong><br>
+        <span style="font-size: 0.95em; display: flex; align-items: center; gap: 5px;">
+            <em>Logika Pi: Karena jari-jari <span class="logic-highlight" id="textKelipatan">Merupakan Kelipatan 7</span>, kita gunakan &pi; = </em>
+            <strong id="textPiValue" style="color:#e17055;"></strong>
+        </span><br>
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+            Luas =&nbsp;
+            <span id="textPiFormula" style="font-weight: bold; color: #e84393;"></span>
+            &nbsp;&times; <span id="textR2">7</span> &times; <span id="textR3">7</span>
+        </div>
+        <div class="result-box">
+            Hasil Akhir: Luas = 🎉 <strong><span id="textResult" style="font-size: 1.4em; color: #00b894;">154</span></strong>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    const inputR = document.getElementById('inputR');
+    const sliderN = document.getElementById('sliderN');
+    const inputN = document.getElementById('inputN');
+    
+    const textR = document.getElementById('textR');
+    const textR2 = document.getElementById('textR2');
+    const textR3 = document.getElementById('textR3');
+    const textKelipatan = document.getElementById('textKelipatan');
+    const textPiValue = document.getElementById('textPiValue');
+    const textPiFormula = document.getElementById('textPiFormula');
+    const textResult = document.getElementById('textResult');
+
+    const color1 = '#0984e3'; 
+    const color2 = '#00b894'; 
+
+    const fractionHTML = `<span class="frac"><span>22</span><span>7</span></span>`;
+
+    sliderN.addEventListener('input', function() {
+        inputN.value = this.value;
+        draw();
+    });
+
+    inputN.addEventListener('input', function() {
+        let val = parseInt(this.value) || 4;
+        if (val % 2 !== 0) val += 1; 
+        if (val > 2000) val = 2000;
+        sliderN.value = val <= 360 ? val : 360;
+        draw();
+    });
+
+    inputR.addEventListener('input', draw);
+
+    function draw() {
+        const rVal = parseFloat(inputR.value) || 0;
+        let n = parseInt(inputN.value) || 4;
+        if (n % 2 !== 0) n += 1;
+
+        let piValue, piText;
+
+        // Trik Matematika di JavaScript: Kalikan dengan 10 lalu bulatkan untuk menghindari error koma
+        // Contoh: 1.4 * 10 = 14. Karena 14 habis dibagi 7, berarti 1.4 adalah kelipatan desimal dari 7.
+        const rCheck = Math.round(rVal * 10); 
+
+        if (rCheck % 70 === 0 && rVal !== 0) {
+            piValue = 22 / 7;
+            piText = fractionHTML;
+            textKelipatan.innerText = "Merupakan Kelipatan 7";
+            textKelipatan.style.color = "#00b894"; 
+            textKelipatan.style.background = "#e8f8f5";
+        } else if (rCheck % 35 === 0 && rVal !== 0) {
+            piValue = 22 / 7;
+            piText = fractionHTML;
+            textKelipatan.innerText = "Kelipatan 3.5 (Bisa dicoret 7)";
+            textKelipatan.style.color = "#00b894"; 
+            textKelipatan.style.background = "#e8f8f5";
+        } else if (rCheck % 7 === 0 && rVal !== 0) {
+            piValue = 22 / 7;
+            piText = fractionHTML;
+            textKelipatan.innerText = "Kelipatan Desimal 7 (Bisa dicoret)";
+            textKelipatan.style.color = "#00b894"; 
+            textKelipatan.style.background = "#e8f8f5";
+        } else {
+            piValue = 3.14;
+            piText = "3.14";
+            textKelipatan.innerText = "BUKAN Kelipatan 7";
+            textKelipatan.style.color = "#d63031"; 
+            textKelipatan.style.background = "#ff767533";
+        }
+
+        const luas = piValue * rVal * rVal;
+
+        textR.innerText = rVal;
+        textR2.innerText = rVal;
+        textR3.innerText = rVal;
+        textPiValue.innerHTML = piText;
+        textPiFormula.innerHTML = piText;
+        textResult.innerText = Number.isInteger(luas) ? luas : (Math.round(luas * 1000) / 1000);
+
+        // --- Menggambar Canvas ---
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const visualR = 110; 
+        const circleCX = 180;
+        const circleCY = 180;
+        const rectStartX = 440; 
+        const rectStartY = 230;
+
+        ctx.fillStyle = '#2d3436';
+        ctx.font = 'bold 18px Nunito';
+        ctx.fillText('⭕ Lingkaran Awal', 110, 40);
+
+        const drawBorder = n <= 100;
+        const theta = (2 * Math.PI) / n;
+
+        // 1. Gambar Lingkaran
+        for (let i = 0; i < n; i++) {
+            ctx.beginPath();
+            ctx.moveTo(circleCX, circleCY);
+            ctx.arc(circleCX, circleCY, visualR, i * theta, (i + 1) * theta);
+            ctx.closePath();
+            ctx.fillStyle = (i % 2 === 0) ? color1 : color2;
+            ctx.fill();
+            if (drawBorder) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(circleCX, circleCY);
+        ctx.lineTo(circleCX + visualR, circleCY);
+        ctx.strokeStyle = '#2d3436';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillRect(circleCX + visualR/2 - 25, circleCY - 22, 60, 20);
+        ctx.fillStyle = '#d63031';
+        ctx.font = '900 16px Nunito';
+        ctx.fillText('r = ' + rVal, circleCX + visualR/2 - 20, circleCY - 6);
+
+        // 2. Gambar Susunan Persegi Panjang dengan Tiling Geometris Presisi
+        ctx.fillStyle = '#2d3436';
+        ctx.font = 'bold 18px Nunito';
+        ctx.fillText('📏 Disusun menjadi Persegi Panjang', rectStartX + 10, 40);
+
+        const targetWidth = Math.PI * visualR;
+        const rSin = visualR * Math.sin(theta / 2);
+        const rCos = visualR * Math.cos(theta / 2);
+        const actualWidth = n * rSin;
+        
+        const hShift = (targetWidth - actualWidth) / 2;
+        const vShift = (visualR - rCos) / 2;
+
+        ctx.beginPath();
+        ctx.rect(rectStartX, rectStartY - visualR, targetWidth, visualR);
+        ctx.strokeStyle = '#b2bec3';
+        ctx.setLineDash([6, 6]);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        for (let i = 0; i < n; i++) {
+            ctx.save();
+            ctx.fillStyle = (i % 2 === 0) ? color1 : color2;
+            
+            if (i % 2 === 0) {
+                let k = i / 2;
+                let x = rectStartX + hShift + rSin + 2 * k * rSin;
+                let y = rectStartY - visualR + vShift;
+                
+                ctx.translate(x, y);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, visualR, Math.PI/2 - theta/2, Math.PI/2 + theta/2);
+                ctx.closePath();
+                ctx.fill();
+                if (drawBorder) {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            } else {
+                let k = Math.floor(i / 2);
+                let x = rectStartX + hShift + 2 * rSin + 2 * k * rSin;
+                let y = rectStartY - visualR + rCos + vShift;
+                
+                ctx.translate(x, y);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, visualR, -Math.PI/2 - theta/2, -Math.PI/2 + theta/2);
+                ctx.closePath();
+                ctx.fill();
+                if (drawBorder) {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+        }
+
+        ctx.fillStyle = '#6c5ce7';
+        ctx.font = 'bold 16px Nunito';
+        ctx.fillText('Tinggi = r', rectStartX - 85, rectStartY - visualR/2 + 6);
+        
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#e84393';
+        ctx.fillText('Panjang alas target = π × r', rectStartX + targetWidth/2, rectStartY + 30);
+        ctx.textAlign = 'left';
+    }
+
+    draw();
+</script>
+
+</body>
+</html>
